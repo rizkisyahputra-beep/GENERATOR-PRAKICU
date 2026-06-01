@@ -30,7 +30,7 @@ function updateSemuanya() {
 
 
     // UPDATE SLIDE 2 (DATA INFOGRAFIS)
-    document.getElementById('outSuhu').innerText = `${sMin} - ${sMax}°`;
+    document.getElementById('outSuhu').innerText = `${sMin} - ${sMax}°C`;
     document.getElementById('outLembap').innerText = `${lMin} - ${lMax}%`;
     document.getElementById('outAngin').innerHTML = `${aDari.toUpperCase()} - ${aKe.toUpperCase()}<br>${aSpeed} KM/JAM`;
     document.getElementById('outPeringatan').innerText = peringatan.toUpperCase();
@@ -45,7 +45,9 @@ function updateSemuanya() {
     }
     
     // GENERATE NARASI
-    let narasi1 = `Kondisi cuaca untuk wilayah Tanah Merah dan sekitarnya pada ${hari}, ${tanggalNarasi} diperkirakan umumnya ${umum}${teksHujan}, dengan detil waktu prakiraan kondisi cuaca sebagai berikut: Pada Pagi hari kondisi cuaca diprakirakan ${cPagi}, Kemudian pada siang hari cuaca diprakirakan ${cSiang}. Selanjutnya untuk malam hari cuaca diprakirakan ${cMalam} dan untuk dini hari cuaca diprakirakan ${cDini}.`;
+    let narasi1 = `Kondisi cuaca untuk wilayah Tanah Merah dan sekitarnya pada ${hari}, ${tanggalNarasi} diperkirakan umumnya ${umum}${teksHujan}, dengan detil waktu prakiraan kondisi cuaca sebagai berikut: 
+    
+    Pada Pagi hari kondisi cuaca diprakirakan ${cPagi}, Kemudian pada siang hari cuaca diprakirakan ${cSiang}. Selanjutnya untuk malam hari cuaca diprakirakan ${cMalam} dan untuk dini hari cuaca diprakirakan ${cDini}.`;
     let narasi2 = `Adapun beberapa parameter cuaca untuk hari ini diprakirakan sebagai berikut: Pertama untuk suhu udara berkisar dari ${sMin} hingga ${sMax} derajat Celsius, kemudian kelembaban udara berkisar ${lMin} hingga ${lMax} persen, serta untuk arah angin diprakirakan bergerak dominan dari arah ${aDari} menuju ${aKe} dengan kecepatan mencapai ${aSpeed} Kilo meter per jam.\nPeringatan Dini: ${peringatan}`;
     
     document.getElementById('inNarasi1').value = narasi1;
@@ -88,10 +90,12 @@ window.addEventListener('load', function() {
 
 
 // ==========================================
-// FITUR DOWNLOAD HD ANTI-BURAM & ANTI-GEPENG
+// FITUR DOWNLOAD HD (DIOPTIMALKAN)
 // ==========================================
+
+// 1. Pengaturan khusus untuk GAMBAR (Kualitas Maksimal PNG)
 const canvasOptions = {
-    scale: 4, // KUNCI ANTI-BURAM: Di-render 4x lipat lebih besar dari layar asli
+    scale: 4, 
     useCORS: true, 
     allowTaint: true,
     scrollY: 0,
@@ -112,15 +116,21 @@ document.getElementById('btnDownloadGambar').addEventListener('click', async fun
     
     html2canvas(captureArea, canvasOptions).then(canvas => {
         const link = document.createElement('a');
-        link.download = `Infografis_Cuaca_HD.png`; 
+        link.download = `Infografis_Cuaca_HD.png`; // Format PNG
         link.href = canvas.toDataURL("image/png", 1.0); 
         link.click();
 
         btn.innerText = teksAsli;
         btn.disabled = false;
+    }).catch(err => {
+        console.error("Terjadi kesalahan:", err);
+        alert("Gagal mengunduh gambar. Coba lagi.");
+        btn.innerText = teksAsli;
+        btn.disabled = false;
     });
 });
 
+// 2. Fitur Download PDF (Ukuran Dioptimalkan pakai JPEG & Scale 2)
 document.getElementById('btnDownloadPDF').addEventListener('click', async function() {
     const btn = this;
     const teksAsli = btn.innerText;
@@ -134,12 +144,23 @@ document.getElementById('btnDownloadPDF').addEventListener('click', async functi
     const pdf = new jsPDF('p', 'px', [800, 800]); 
     const slides = ['slide1', 'slide2', 'slide3', 'slide4'];
 
+    // Opsi khusus PDF: Scale diturunkan ke 2
+    const pdfCanvasOptions = {
+        scale: 2, 
+        useCORS: true, 
+        allowTaint: true,
+        scrollY: 0,
+        backgroundColor: null 
+    };
+
     for (let i = 0; i < slides.length; i++) {
         const captureArea = document.getElementById(slides[i]);
-        const canvas = await html2canvas(captureArea, canvasOptions); 
-        const imgData = canvas.toDataURL('image/png', 1.0); 
+        const canvas = await html2canvas(captureArea, pdfCanvasOptions); 
         
-        pdf.addImage(imgData, 'PNG', 0, 0, 800, 800);
+        // Kompresi kualitas JPEG 75% agar ringan
+        const imgData = canvas.toDataURL('image/jpeg', 0.75); 
+        
+        pdf.addImage(imgData, 'JPEG', 0, 0, 800, 800);
         if (i < slides.length - 1) {
             pdf.addPage();
         }
